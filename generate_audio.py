@@ -4,9 +4,11 @@ import requests
 import ffmpeg
 
 
-api_server = "http://127.0.0.1:50032"
-input_file = "scenario.txt"
-output_file = "audio.wav"
+API_SERVER = "http://127.0.0.1:50032"
+INPUT_FILE = "scenario.txt"
+OUTPUT_FILE = "audio.wav"
+SPEAKER_UUID = "3c37646f-3881-5374-2a83-149267990abc"
+STYLE_ID = 0
 
 
 def synthesis(text: str):
@@ -14,8 +16,8 @@ def synthesis(text: str):
     文字列を音声化する
     """
     query = {
-        "speakerUuid": "3c37646f-3881-5374-2a83-149267990abc",
-        "styleId": 0,
+        "speakerUuid": SPEAKER_UUID,
+        "styleId": STYLE_ID,
         "text": text,
         "speedScale": 1.0,
         "volumeScale": 1.0,
@@ -29,7 +31,7 @@ def synthesis(text: str):
 
     # 音声合成を実行
     response = requests.post(
-        f"{api_server}/v1/synthesis",
+        f"{API_SERVER}/v1/synthesis",
         headers={"Content-Type": "application/json"},
         data=json.dumps(query),
     )
@@ -53,7 +55,7 @@ def append_audio(audio1: str, audio2: str):
 
 
 if __name__ == "__main__":
-    with open(input_file, "r", encoding="utf-8") as f:
+    with open(INPUT_FILE, "r", encoding="utf-8") as f:
         count = 0
         for line in f:
             line = line.strip()
@@ -64,20 +66,20 @@ if __name__ == "__main__":
 
             # 無音区間の挿入
             if line == "<<silent>>":
-                append_audio(output_file, "assets/silent.wav")
+                append_audio(OUTPUT_FILE, "assets/silent.wav")
                 continue
 
             # テキストを音声化
             audio = synthesis(line)
 
             if count == 0:
-                with open(output_file, "wb") as f_temp:
+                with open(OUTPUT_FILE, "wb") as f_temp:
                     f_temp.write(audio)
             else:
                 temp_file = "temp.wav"
                 with open(temp_file, "wb") as f_temp:
                     f_temp.write(audio)
-                append_audio(output_file, temp_file)
+                append_audio(OUTPUT_FILE, temp_file)
                 os.remove(temp_file)
 
             count += 1

@@ -1,7 +1,7 @@
 import json
 import requests
 
-api_server = "http://127.0.0.1:50032"
+API_SERVER = "http://127.0.0.1:50032"
 
 
 def save_speakers():
@@ -11,7 +11,7 @@ def save_speakers():
     speakers = []
 
     response = requests.get(
-        f"{api_server}/v1/speakers",
+        f"{API_SERVER}/v1/speakers",
     )
 
     for item in json.loads(response.content):
