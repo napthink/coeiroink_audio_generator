@@ -130,7 +130,7 @@ def edit_position(fname: str, position: Position):
             check=True,
         )
     if cp.returncode != 0:
-        print("ls failed.", file=sys.stderr)
+        print("ffmpeg failed.", file=sys.stderr)
         sys.exit(1)
 
     os.remove(old_file)
@@ -154,7 +154,7 @@ if __name__ == "__main__":
             line = line.strip()
 
             # 終了
-            if line == "<<end>>":
+            if line == "--end":
                 break
 
             # 見出しやコメントをスキップ
@@ -162,47 +162,54 @@ if __name__ == "__main__":
                 continue
 
             # 無音区間の挿入
-            if line == "<<silent>>":
-                append_audio(output_file, "assets/silent.wav")
+            if line.startswith("--silent"):
+                silent_params = line.split(":")
+                if len(silent_params) == 1:
+                    append_audio(output_file, "assets/silent.wav")
+                elif len(silent_params) > 1:
+                    # 回数指定がある場合
+                    num = int(silent_params[1])
+                    for i in range(num):
+                        append_audio(output_file, "assets/silent.wav")
                 continue
 
             # 任意の音声ファイルの挿入
-            if line.startswith("<<audio"):
-                audio_path = line.strip("<<>>").split(":")[1]
+            if line.startswith("--audio"):
+                audio_path = line.split(":")[1]
                 append_audio(output_file, audio_path)
                 continue
 
             # speed変更
-            if line.startswith("<<speed"):
-                speed = float(line.strip("<<>>").split(":")[1])
+            if line.startswith("--speed"):
+                speed = float(line.split(":")[1])
                 params["speedScale"] = speed
                 continue
 
             # scale変更
-            if line.startswith("<<scale"):
-                scale_params = line.strip("<<>>").split()[1:]
+            if line.startswith("--scale"):
+                scale_params = line.split()[1:]
                 for param in scale_params:
                     key, value = param.split(":")
                     params[key + "Scale"] = float(value)
                 continue
 
             # SPEAKER_UUID変更
-            if line.startswith("<<speakerUuid"):
-                current_speaker_uuid = line.strip("<<>>").split(":")[1]
+            if line.startswith("--speakerUuid"):
+                current_speaker_uuid = line.split(":")[1]
                 continue
 
             # STYLE_ID変更
-            if line.startswith("<<styleId"):
-                current_style_id = int(line.strip("<<>>").split(":")[1])
+            if line.startswith("--styleId"):
+                current_style_id = int(line.split(":")[1])
                 continue
 
             # ポジション変更
-            if line.startswith("<<position"):
-                current_position = Position(line.strip("<<>>").split(":")[1])
+            if line.startswith("--position"):
+                current_position = Position(line.split(":")[1])
                 continue
 
             # リセット
-            if line == "<<reset>>":
+            if line == "--reset":
                 params = DEFAULT_PARAMS.copy()
                 current_speaker_uuid = args.speakerUuid
                 current_style_id = args.styleId
